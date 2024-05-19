@@ -3,8 +3,8 @@ import usersController from "../controllers/usersContollers.js";
 
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import validateBody from "../helpers/validateBody.js";
-import isValidId from "../middlewares/IsValidId.js";
 import { userSignupSchema } from "../schemas/usersSchemas.js";
+import authenticate from "../middlewares/authenticate.js";
 
 const usersRouter = express.Router();
 
@@ -15,10 +15,14 @@ usersRouter.post(
   usersController.signup
 );
 
-// usersRouter.post( "/login", usersController.getOneContact);
+usersRouter.post(
+  "/login",
+  validateBody(userSignupSchema),
+  usersController.login
+);
 
-// usersRouter.post("/logout", usersController.deleteContact);
+usersRouter.get("/current", authenticate, usersController.getCurrent);
 
-// usersRouter.get("/current", usersController.getOneUser);
+usersRouter.post("/logout", authenticate, usersController.signout);
 
 export default usersRouter;
