@@ -3,10 +3,21 @@ import usersController from "../controllers/usersContollers.js";
 
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import validateBody from "../helpers/validateBody.js";
-import { userSignupSchema } from "../schemas/usersSchemas.js";
+import {
+  userSignupSchema,
+  subscripsionSchema,
+} from "../schemas/usersSchemas.js";
 import authenticate from "../middlewares/authenticate.js";
 
 const usersRouter = express.Router();
+
+usersRouter.patch(
+  "/",
+  authenticate,
+  isEmptyBody,
+  validateBody(subscripsionSchema),
+  usersController.updateSubscription
+);
 
 usersRouter.post(
   "/register",

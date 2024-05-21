@@ -74,9 +74,24 @@ const signout = async (req, res) => {
   });
 };
 
+const updateSubscription = async (req, res, next) => {
+  try {
+    const { _id } = req.user;
+    const { subscription } = req.body;
+    await userServices.updateSubscr({ _id }, { subscription });
+    res.json({
+      message: `Subscription updated successfully`,
+      subscription: subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   signup,
   login,
   getCurrent,
   signout,
+  updateSubscription,
 };

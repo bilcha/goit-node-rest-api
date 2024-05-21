@@ -9,3 +9,6 @@ export const registerUser = async (data) => {
 };
 
 export const updateUser = (filter, data) => User.findOneAndUpdate(filter, data);
+
+export const updateSubscr = (filter, data) =>
+  User.findOneAndUpdate(filter, data);
