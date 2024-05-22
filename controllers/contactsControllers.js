@@ -9,8 +9,8 @@ import {
 const getAllContacts = async (req, res, next) => {
   try {
     const { _id: owner } = req.user;
-    const { page = 1, limit = 20, favorite = true } = req.query;
-    const filter = { owner, favorite };
+    const { page = 1, limit = 20, favorite = undefined } = req.query;
+    let filter = favorite === undefined ? { owner } : { owner, favorite };
     const fields = "-createdAt -updatedAt";
     const skip = (page - 1) * limit;
     const settings = { skip, limit };
@@ -75,7 +75,6 @@ const updateContact = async (req, res, next) => {
     if (error) {
       throw HttpError(400, error.message);
     }
-    const { id } = req.params;
     const result = await contactServices.updateContactByFilter(
       { _id, owner },
       req.body
@@ -96,11 +95,10 @@ const updateContactFavorite = async (req, res, next) => {
     }
     const { _id: owner } = req.user;
     const { id: _id } = req.params;
-    const result = await contactServices.updateStatusContact({
-      ...req.body,
-      owner,
-      _id,
-    });
+    const result = await contactServices.updateStatusContact(
+      { _id, owner },
+      req.body
+    );
     if (!result) {
       throw HttpError(404, `Contact not found`);
     }

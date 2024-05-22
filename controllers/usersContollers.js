@@ -9,7 +9,7 @@ const signup = async (req, res, next) => {
   try {
     const { error } = userSignupSchema.validate(req.body);
     if (error) {
-      throw HttpError(400, "Помилка від Joi або іншої бібліотеки валідації");
+      throw HttpError(400, error.message);
     }
     const user = await userServices.findUser({ email });
     if (user) {
@@ -69,9 +69,7 @@ const getCurrent = (req, res) => {
 const signout = async (req, res) => {
   const { _id } = req.user;
   await userServices.updateUser({ _id }, { token: "" });
-  res.json({
-    message: "Signout successfully",
-  });
+  res.status(204).send();
 };
 
 const updateSubscription = async (req, res, next) => {

@@ -9,12 +9,12 @@ export const getContactByFilter = (filter) => {
   return Contact.findOne(filter);
 };
 
-export const removeContact = (filter) => Contact.findByIdAndDelete(filter);
+export const removeContact = (filter) => Contact.findOneAndDelete(filter);
 
 export const addContact = (data) => Contact.create(data);
 
 export const updateContactByFilter = (filter, data) =>
-  Contact.findByIdAndUpdate(filter, data);
+  Contact.findOneAndUpdate(filter, data);
 
 export const updateStatusContact = (filter, favorite) =>
-  Contact.findByIdAndUpdate(filter, favorite);
+  Contact.findOneAndUpdate(filter, favorite);
