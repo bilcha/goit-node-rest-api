@@ -3,6 +3,11 @@ import HttpError from "../helpers/HttpError.js";
 import { userSignupSchema } from "../schemas/usersSchemas.js";
 import compareHash from "../helpers/compareHash.js";
 import { createToken } from "../helpers/jwt.js";
+import fs from "fs/promises";
+import path from "path";
+
+const avatarsPath = path.resolve("public", "avatars");
+console.log(avatarsPath);
 
 const signup = async (req, res, next) => {
   const { email } = req.body;
@@ -11,15 +16,21 @@ const signup = async (req, res, next) => {
     if (error) {
       throw HttpError(400, error.message);
     }
+    const { path: oldPath, filename } = req.files;
+    const newPath = path.join(avatarsPath, filename);
+    await fs.rename(oldPath, newPath);
+    const avatarURL = path.join("avatars", filename);
+
     const user = await userServices.findUser({ email });
     if (user) {
       throw HttpError(409, "Email in use");
     }
-    const result = await userServices.registerUser(req.body);
+    const result = await userServices.registerUser({ ...req.body, avatarURL });
     res.status(201).json({
       user: {
         email: result.email,
         subscription: result.subscription,
+        avatarURL: result.avatarURL,
       },
     });
   } catch (error) {
