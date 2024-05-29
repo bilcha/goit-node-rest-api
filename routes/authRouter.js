@@ -1,6 +1,6 @@
 import express from "express";
 import usersController from "../controllers/usersContollers.js";
-
+import upload from "../middlewares/upload.js";
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import validateBody from "../helpers/validateBody.js";
 import {
@@ -35,5 +35,12 @@ usersRouter.post(
 usersRouter.get("/current", authenticate, usersController.getCurrent);
 
 usersRouter.post("/logout", authenticate, usersController.signout);
+
+usersRouter.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatar"),
+  usersController.updateAvatar
+);
 
 export default usersRouter;

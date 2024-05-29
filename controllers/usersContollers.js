@@ -5,9 +5,10 @@ import compareHash from "../helpers/compareHash.js";
 import { createToken } from "../helpers/jwt.js";
 import fs from "fs/promises";
 import path from "path";
+import gravatar from "gravatar";
+import Jimp from "jimp";
 
 const avatarsPath = path.resolve("public", "avatars");
-console.log(avatarsPath);
 
 const signup = async (req, res, next) => {
   const { email } = req.body;
@@ -16,10 +17,8 @@ const signup = async (req, res, next) => {
     if (error) {
       throw HttpError(400, error.message);
     }
-    const { path: oldPath, filename } = req.files;
-    const newPath = path.join(avatarsPath, filename);
-    await fs.rename(oldPath, newPath);
-    const avatarURL = path.join("avatars", filename);
+
+    const avatarURL = gravatar.url(email, { s: "250" }, true);
 
     const user = await userServices.findUser({ email });
     if (user) {
@@ -96,6 +95,24 @@ const updateSubscription = async (req, res, next) => {
     next(error);
   }
 };
+const updateAvatar = async (req, res, next) => {
+  const { _id } = req.user;
+  try {
+    const avatar = await Jimp.read(req.file.path);
+    await avatar.cover(250, 250).writeAsync(req.file.path);
+
+    const { path: oldPath, filename } = req.file;
+    const newPath = path.join(avatarsPath, filename);
+    await fs.rename(oldPath, newPath);
+
+    const avatarURL = path.join("avatars", filename);
+    const response = await userServices.updateUser({ _id }, { avatarURL });
+
+    res.status(200).json({ avatarURL });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default {
   signup,
@@ -103,4 +120,5 @@ export default {
   getCurrent,
   signout,
   updateSubscription,
+  updateAvatar,
 };
