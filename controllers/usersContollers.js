@@ -98,6 +98,9 @@ const updateSubscription = async (req, res, next) => {
 const updateAvatar = async (req, res, next) => {
   const { _id } = req.user;
   try {
+    if (!req.file) {
+      throw HttpError(409, "Please attach at least one file");
+    }
     const avatar = await Jimp.read(req.file.path);
     await avatar.cover(250, 250).writeAsync(req.file.path);
 
@@ -106,7 +109,7 @@ const updateAvatar = async (req, res, next) => {
     await fs.rename(oldPath, newPath);
 
     const avatarURL = path.join("avatars", filename);
-    const response = await userServices.updateUser({ _id }, { avatarURL });
+    await userServices.updateUser({ _id }, { avatarURL });
 
     res.status(200).json({ avatarURL });
   } catch (error) {
