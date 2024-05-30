@@ -3,6 +3,8 @@ import HttpError from "../helpers/HttpError.js";
 import { userSignupSchema } from "../schemas/usersSchemas.js";
 import compareHash from "../helpers/compareHash.js";
 import { createToken } from "../helpers/jwt.js";
+import sendEmail from "../helpers/sendEmail.js";
+import { nanoid } from "nanoid";
 import fs from "fs/promises";
 import path from "path";
 import gravatar from "gravatar";
@@ -24,13 +26,75 @@ const signup = async (req, res, next) => {
     if (user) {
       throw HttpError(409, "Email in use");
     }
-    const result = await userServices.registerUser({ ...req.body, avatarURL });
+    const verificationToken = nanoid();
+
+    const result = await userServices.registerUser({
+      ...req.body,
+      avatarURL,
+      verificationToken,
+    });
+
+    const msg = {
+      to: email,
+      from: "cinari2254@fresec.com",
+      subject: "Verify email",
+      html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Click verify email</a>`,
+    };
+
+    sendEmail(msg);
     res.status(201).json({
       user: {
         email: result.email,
         subscription: result.subscription,
         avatarURL: result.avatarURL,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const verify = async (req, res, next) => {
+  const { verificationToken } = req.params;
+  try {
+    const user = await userServices.findUser({ verificationToken });
+    if (!user) {
+      throw HttpError(404, "User not found");
+    }
+
+    await userServices.updateUser(
+      { _id: user._id },
+      { verify: true, verificationToken: "" }
+    );
+
+    res.json({
+      message: "Verification successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resendVerify = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await userServices.findUser({ email });
+    if (!user) {
+      throw HttpError(404, "User not found");
+    }
+    if (user.verify) {
+      throw HttpError(400, "Verification has already been passed");
+    }
+    const msg = {
+      to: email,
+      from: "cinari2254@fresec.com",
+      subject: "Re-verify email",
+      html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${user.verificationToken}">Click verify email</a>`,
+    };
+    sendEmail(msg);
+
+    res.json({
+      message: "Verification email sent",
     });
   } catch (error) {
     next(error);
@@ -47,6 +111,9 @@ const login = async (req, res, next) => {
     const comparePassword = await compareHash(password, user.password);
     if (!comparePassword) {
       throw HttpError(401, "Email or password is wrong");
+    }
+    if (!user.verify) {
+      throw HttpError(401, "Email not verified");
     }
     const { _id: id } = user;
 
@@ -119,6 +186,8 @@ const updateAvatar = async (req, res, next) => {
 
 export default {
   signup,
+  verify,
+  resendVerify,
   login,
   getCurrent,
   signout,

@@ -6,6 +6,7 @@ import validateBody from "../helpers/validateBody.js";
 import {
   userSignupSchema,
   subscripsionSchema,
+  emailSchema,
 } from "../schemas/usersSchemas.js";
 import authenticate from "../middlewares/authenticate.js";
 
@@ -24,6 +25,14 @@ usersRouter.post(
   isEmptyBody,
   validateBody(userSignupSchema),
   usersController.signup
+);
+
+usersRouter.get("/verify/:verificationToken", usersController.verify);
+usersRouter.post(
+  "/verify",
+  isEmptyBody,
+  validateBody(emailSchema),
+  usersController.resendVerify
 );
 
 usersRouter.post(
